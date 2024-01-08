@@ -1,6 +1,7 @@
 package pe.fwani.antlr;
 
 import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 /**
  * <p>
@@ -12,7 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class QueryParseListener extends pe.fwani.antlr.SqliteBaseListener {
     @Override
-    public void enterParse(pe.fwani.antlr.SqliteParser.ParseContext ctx) {
-        log.info(ctx.getText());
+    public void enterEveryRule(ParserRuleContext ctx) {
+        log.info("rule entered: " + ctx.getText());
     }
+
 }

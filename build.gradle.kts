@@ -27,7 +27,6 @@ dependencies {
 
     antlr("org.antlr:antlr4:4.11.1")
     implementation("org.antlr:antlr4-runtime:4.11.1")
-    implementation("com.google.code.gson:gson:2.7")
 
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))

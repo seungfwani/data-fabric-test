@@ -1,7 +1,5 @@
 package pe.fwani;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import net.sf.jsqlparser.JSQLParserException;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -13,7 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import pe.fwani.antlr.QueryParseListener;
+import pe.fwani.antlr.*;
 import pe.fwani.antlr.SqliteLexer;
 import pe.fwani.antlr.SqliteParser;
 
@@ -31,14 +29,6 @@ import java.util.Map;
  */
 @RestController
 public class ParserController {
-    private static final Gson PRETTY_PRINT_GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Gson GSON = new Gson();
-    public static String toJson(ParseTree tree) {
-        return toJson(tree, true);
-    }
-    public static String toJson(ParseTree tree, boolean prettyPrint) {
-        return prettyPrint ? PRETTY_PRINT_GSON.toJson(toMap(tree)) : GSON.toJson(toMap(tree));
-    }
 
     public static Map<String, Object> toMap(ParseTree tree) {
         Map<String, Object> map = new LinkedHashMap<>();
@@ -52,8 +42,7 @@ public class ParserController {
             Token token = ((TerminalNodeImpl) tree).getSymbol();
             map.put("type", token.getType());
             map.put("text", token.getText());
-        }
-        else {
+        } else {
             List<Map<String, Object>> children = new ArrayList<>();
             String name = tree.getClass().getSimpleName().replaceAll("Context$", "");
             map.put(Character.toLowerCase(name.charAt(0)) + name.substring(1), children);
@@ -74,11 +63,18 @@ public class ParserController {
 
         var tokens = new CommonTokenStream(lexer);
         var parser = new SqliteParser(tokens);
-        var parseTree = parser.expr();
+        var listener = new QueryParseListener();
+        parser.removeErrorListeners();
+        parser.addErrorListener(new QueryParseErrorListener());
+        try {
+            var parseTree = parser.parse();
+            var walker = new ParseTreeWalker();
+            walker.walk(listener, parseTree);
+            return Map.of("data", toMap(parseTree));
+        } catch (SqlParseException e) {
+            return Map.of("message", e.getMessage());
+        }
 
-        var walker = new ParseTreeWalker();
-        walker.walk(new QueryParseListener(), parseTree);
-        return Map.of("data", toJson(parser.parse()));
 //        var stmt = CCJSqlParserUtil.parse(queryDTO.getQuery());
 //        System.out.println(stmt.toString());
 //        return Map.of("data", stmt.toString());

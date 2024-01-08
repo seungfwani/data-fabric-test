@@ -256,7 +256,7 @@ keyword  // https://sqlite.org/lang_keywords.html
 //| K_OF
 | K_OFFSET
 | K_ON
-//| K_OR
+| K_OR
 | K_ORDER
 | K_OUTER
 | K_PLAN
@@ -319,7 +319,7 @@ window_name: any_name;
 
 any_name
 : IDENTIFIER
-| keyword
+| '`' keyword '`'
 | STRING_LITERAL
 | '(' any_name ')'
 ;

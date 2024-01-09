@@ -1,3 +1,10 @@
+/*
+sqlite 의 SQL 문법을 참고하여 파싱 문법을 정의 합니다.
+https://sqlite.org/lang.html
+
+2024-01-08 기준 SELECT 문법에 대한 내용이 작성 되어 있습니다.
+*/
+
 grammar Sqlite;
 
 // EOF 사용 이유 : https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md#start-rules-and-eof
@@ -17,6 +24,7 @@ sql_stmt
 )
 ;
 
+// https://sqlite.org/lang_select.html
 select_stmt
 : (K_WITH K_RECURSIVE? common_table_expression (',' common_table_expression)*)?
   select_core (compound_operator select_core)*
@@ -66,8 +74,6 @@ expr
 | expr ('&' | '|' | '<<' | '>>') expr
 | expr ('<' | '>' | '<=' | '>=') expr
 | expr ('=' | '<>' | '!=') expr
-| expr K_AND expr
-| expr K_OR expr
 | function_name '(' function_arguments ')' filter_clause? over_clause?
 | '(' expr (',' expr)* ')'
 | K_CAST '(' expr K_AS type_name ')'
@@ -80,6 +86,8 @@ expr
                    | (schema_name '.')? table_name)  // schema_name.function(...) 은 사용 안함
 | (K_NOT? K_EXISTS)? '(' select_stmt ')'
 | K_CASE expr? (K_WHEN expr K_THEN expr)+ (K_ELSE expr)? K_END
+| expr K_AND expr
+| expr K_OR expr
 | raise_function
 ;
 

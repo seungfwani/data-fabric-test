@@ -14,7 +14,7 @@ parse
 
 // statements
 sql_stmt_list
-: ';'* sql_stmt (';'+ sql_stmt)* ';'*
+: SCOL* sql_stmt (SCOL+ sql_stmt)* SCOL*
 ;
 
 sql_stmt
@@ -26,27 +26,27 @@ sql_stmt
 
 // https://sqlite.org/lang_select.html
 select_stmt
-: (K_WITH K_RECURSIVE? common_table_expression (',' common_table_expression)*)?
+: (K_WITH K_RECURSIVE? common_table_expression (COMMA common_table_expression)*)?
   select_core (compound_operator select_core)*
-  (K_ORDER K_BY ordering_term (',' ordering_term)*)?
-  (K_LIMIT expr ((K_OFFSET | ',') expr)?)?
+  (K_ORDER K_BY ordering_term (COMMA ordering_term)*)?
+  (K_LIMIT expr ((K_OFFSET | COMMA) expr)?)?
 ;
 
 //update_stmt:;
 //update_stmt_limited:;
 
 common_table_expression
-: table_name ('(' column_name (',' column_name)* ')')?
-  K_AS (K_NOT? K_MATERIALIZED)? '(' select_stmt ')'
+: table_name (OPEN_PAR column_name (COMMA column_name)* CLOSE_PAR)?
+  K_AS (K_NOT? K_MATERIALIZED)? OPEN_PAR select_stmt CLOSE_PAR
 ;
 
 select_core
-: K_SELECT (K_DISTINCT | K_ALL)? result_column (',' result_column)*
-  (K_FROM (table_or_subquery (',' table_or_subquery)* | join_clause))?
+: K_SELECT (K_DISTINCT | K_ALL)? result_column (COMMA result_column)*
+  (K_FROM (table_or_subquery (COMMA table_or_subquery)* | join_clause))?
   (K_WHERE expr)?
-  (K_GROUP K_BY expr (',' expr)* (K_HAVING expr)?)?  // group by 없이 having 절을 사용하는 경우는 제외 함
-  (K_WINDOW window_name K_AS window_defn (',' window_name K_AS window_defn)*)?
-| K_VALUES '(' expr (',' expr)* ')' (',' '(' expr (',' expr)* ')')*
+  (K_GROUP K_BY expr (COMMA expr)* (K_HAVING expr)?)?  // group by 없이 having 절을 사용하는 경우는 제외 함
+  (K_WINDOW window_name K_AS window_defn (COMMA window_name K_AS window_defn)*)?
+| K_VALUES OPEN_PAR expr (COMMA expr)* CLOSE_PAR (COMMA OPEN_PAR expr (COMMA expr)* CLOSE_PAR)*
 ;
 
 // operator 우선순위 https://sqlite.org/lang_expr.html
@@ -57,7 +57,7 @@ select_core
 // & | << >>
 // ESCAPE
 // < > <= >=
-// =   <>   !=   IS   IS NOT   IS DISTINCT FROM   IS NOT DISTINCT FROM
+// =   ==   <>   !=   IS   IS NOT   IS DISTINCT FROM   IS NOT DISTINCT FROM
 //     BETWEEN expr AND expr   IN   MATCH   LIKE   REGEXP   GLOB
 //     ISNULL   NOTNULL   NOT NULL
 // NOT expr
@@ -66,25 +66,25 @@ select_core
 expr
 : literal_value
 | BIND_PARAMETER
-| ((schema_name '.')? table_name '.')? column_name
+| function_name OPEN_PAR function_arguments CLOSE_PAR filter_clause? over_clause?
+| ((schema_name DOT)? table_name DOT)? column_name
 | unary_operator expr
-| expr '||' expr
-| expr ('*' | '/' | '%') expr
-| expr ('+' | '-') expr
-| expr ('&' | '|' | '<<' | '>>') expr
-| expr ('<' | '>' | '<=' | '>=') expr
-| expr ('=' | '<>' | '!=') expr
-| function_name '(' function_arguments ')' filter_clause? over_clause?
-| '(' expr (',' expr)* ')'
-| K_CAST '(' expr K_AS type_name ')'
+| expr PIPE2 expr
+| expr (STAR | DIV | MOD) expr
+| expr (PLUS | MINUS) expr
+| expr (AMP | PIPE | GT2 | LT2) expr
+| expr (GT | LT | GT_EQ | LT_EQ) expr
+| expr (EQ | EQ2 | NOT_EQ1 | NOT_EQ2) expr
+| OPEN_PAR expr (COMMA expr)* CLOSE_PAR
+| K_CAST OPEN_PAR expr K_AS type_name CLOSE_PAR
 | expr K_COLLATE collation_name
 | expr K_NOT? (K_LIKE expr (K_ESCAPE expr)? | (K_GLOB | K_REGEXP | K_MATCH) expr)
 | expr (K_ISNULL | K_NOTNULL | K_NOT K_NULL)
 | expr K_IS K_NOT? (K_DISTINCT K_FROM)? expr
 | expr K_NOT? K_BETWEEN expr K_AND expr
-| expr K_NOT? K_IN ('(' (select_stmt | expr (',' expr)*)? ')'
-                   | (schema_name '.')? table_name)  // schema_name.function(...) 은 사용 안함
-| (K_NOT? K_EXISTS)? '(' select_stmt ')'
+| expr K_NOT? K_IN (OPEN_PAR (select_stmt | expr (COMMA expr)*)? CLOSE_PAR
+                   | (schema_name DOT)? table_name)  // schema_name.function(...) 은 사용 안함
+| (K_NOT? K_EXISTS)? OPEN_PAR select_stmt CLOSE_PAR
 | K_CASE expr? (K_WHEN expr K_THEN expr)+ (K_ELSE expr)? K_END
 | expr K_AND expr
 | expr K_OR expr
@@ -92,15 +92,15 @@ expr
 ;
 
 filter_clause
-: K_FILTER '(' K_WHERE expr ')'
+: K_FILTER OPEN_PAR K_WHERE expr CLOSE_PAR
 ;
 
 over_clause
 : K_OVER ( window_name
-         | '(' base_window_name?
-         (K_PARTITION K_BY expr (',' expr)*)?
-         (K_ORDER K_BY ordering_term (',' ordering_term)*)?
-         frame_spec? ')')
+         | OPEN_PAR base_window_name?
+         (K_PARTITION K_BY expr (COMMA expr)*)?
+         (K_ORDER K_BY ordering_term (COMMA ordering_term)*)?
+         frame_spec? CLOSE_PAR)
 ;
 
 join_clause
@@ -114,23 +114,23 @@ ordering_term
 
 result_column
 : expr (K_AS? column_alias)?
-| '*'
-| table_name '.' '*'
+| STAR
+| table_name DOT STAR
 ;
 
 table_or_subquery
-: (schema_name '.')? table_name (K_AS? table_alias)?
+: (schema_name DOT)? table_name (K_AS? table_alias)?
   (K_INDEXED K_BY index_name | K_NOT K_INDEXED)?
-| '(' select_stmt ')' (K_AS? table_alias)?
-| '(' (table_or_subquery (',' table_or_subquery)* | join_clause) ')'
+| OPEN_PAR select_stmt CLOSE_PAR (K_AS? table_alias)?
+| OPEN_PAR (table_or_subquery (COMMA table_or_subquery)* | join_clause) CLOSE_PAR
 ;
 
 window_defn
-: '(' base_window_name?
-  (K_PARTITION K_BY expr (',' expr)*)?
-  (K_ORDER K_BY ordering_term (',' ordering_term)*)?
+: OPEN_PAR base_window_name?
+  (K_PARTITION K_BY expr (COMMA expr)*)?
+  (K_ORDER K_BY ordering_term (COMMA ordering_term)*)?
   frame_spec?
-  ')'
+  CLOSE_PAR
 ;
 
 frame_spec
@@ -154,14 +154,14 @@ frame_spec
 ;
 
 function_arguments
-: K_DISTINCT? expr (',' expr)* (K_ORDER K_BY ordering_term (',' ordering_term)*)?
-| '*'?
+: K_DISTINCT? expr (COMMA expr)* (K_ORDER K_BY ordering_term (COMMA ordering_term)*)?
+| STAR?
 ;
 
 raise_function
-: K_RAISE '(' ( K_IGNORE
-              | (K_ROLLBACK | K_ABORT | K_FAIL) ',' error_message)
- ')'
+: K_RAISE OPEN_PAR ( K_IGNORE
+                   | (K_ROLLBACK | K_ABORT | K_FAIL) COMMA error_message)
+  CLOSE_PAR
 ;
 
 
@@ -170,12 +170,12 @@ error_message
 ;
 
 signed_number
-: ('+' | '-')? NUMERIC_LITERAL
+: (PLUS | MINUS)? NUMERIC_LITERAL
 ;
 
 join_constraint
 : (K_ON expr
-  | K_USING '(' column_name (',' column_name)* ')'
+  | K_USING OPEN_PAR column_name (COMMA column_name)* CLOSE_PAR
   )?
 ;
 
@@ -310,7 +310,7 @@ keyword  // https://sqlite.org/lang_keywords.html
 
 // names
 type_name
-: name+ ('(' signed_number (',' signed_number)? ')')?
+: name+ (OPEN_PAR signed_number (COMMA signed_number)? CLOSE_PAR)?
 ;
 
 base_window_name: any_name;
@@ -327,9 +327,9 @@ window_name: any_name;
 
 any_name
 : IDENTIFIER
-| '`' keyword '`'
+| BACKTICK keyword BACKTICK
 | STRING_LITERAL
-| '(' any_name ')'
+| OPEN_PAR any_name CLOSE_PAR
 ;
 
 compound_operator
@@ -339,16 +339,16 @@ compound_operator
 ;
 
 join_operator
-: ','
+: COMMA
 | (K_NATURAL? ((K_LEFT | K_RIGHT | K_FULL) K_OUTER? | K_INNER)?
   | K_CROSS?)
   K_JOIN
 ;
 
 unary_operator
-: '-'
-| '+'
-| '~'
+: MINUS
+| PLUS
+| TILDE
 | K_NOT
 ;
 
@@ -489,6 +489,32 @@ MULTILINE_COMMENT
 SPACES
 : [ \u000B\t\r\n] -> channel(HIDDEN)
 ;
+
+BACKTICK  : '`';
+SCOL      : ';';
+DOT       : '.';
+OPEN_PAR  : '(';
+CLOSE_PAR : ')';
+COMMA     : ',';
+STAR      : '*';
+PLUS      : '+';
+MINUS     : '-';
+TILDE     : '~';
+PIPE2     : '||';
+DIV       : '/';
+MOD       : '%';
+LT2       : '<<';
+GT2       : '>>';
+AMP       : '&';
+PIPE      : '|';
+LT        : '<';
+LT_EQ     : '<=';
+GT        : '>';
+GT_EQ     : '>=';
+EQ        : '=';
+EQ2       : '==';
+NOT_EQ1   : '!=';
+NOT_EQ2   : '<>';
 
 UNEXPECTED_CHAR
 : .

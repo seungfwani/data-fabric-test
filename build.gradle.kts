@@ -29,6 +29,7 @@ dependencies {
     implementation("org.antlr:antlr4-runtime:4.11.1")
 
 
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }

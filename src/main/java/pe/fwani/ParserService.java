@@ -135,6 +135,9 @@ public class ParserService {
                     indexOfFrom = i;
                 }
             }
+            if (indexOfFrom == -1) {
+                return;
+            }
             var detectedTableOrSubQuery = (SqliteParser.Table_or_subqueryContext) tree.getChild(indexOfFrom + 1);
             if (detectedTableOrSubQuery.table_name() != null) {  // 바로 table 나옴
                 var detectedTableName = detectedTableOrSubQuery.getText();

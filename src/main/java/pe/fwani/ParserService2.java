@@ -10,7 +10,6 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.springframework.stereotype.Service;
 import pe.fwani.antlr.*;
-import pe.fwani.antlr.SqliteParser;
 import pe.fwani.antlr.SqliteV2Lexer;
 import pe.fwani.antlr.SqliteV2Parser;
 
@@ -53,51 +52,24 @@ public class ParserService2 {
         }
     }
 
-    public List<String> getColumns(ParseTree tree) {
-        return List.of();
-    }
-
-    public String getTable(ParseTree tree) {
-        if (tree instanceof SqliteParser.Any_nameContext) {
-
-        }
-        for (int i = 1; i < tree.getChildCount(); i++) {
-            var child = tree.getChild(i);
-            if (child instanceof SqliteParser.Table_or_subqueryContext) {
-
-            }
-        }
-        return "";
-    }
-
-    public Map<String, List<String>> traverse(ParseTree tree) {
-        Map<String, List<String>> output = new HashMap<>();
-        if (tree instanceof SqliteParser.Select_coreContext) {
-            var select_ = tree.getChild(0);
-            var columns = getColumns(tree);
-
-            var from_ = tree.getChild(1);
-            if (from_ == null) {
-                output.put(NON_RECOGNIZED_COLUMNS_KEY, columns);
+    public List<String> getTable(ParseTree tree) {
+        if (tree instanceof SqliteV2Parser.Table_or_subqueryContext) {
+            if (((SqliteV2Parser.Table_or_subqueryContext) tree).table_name() != null) {
+                return List.of(tree.getText());
             } else {
-                var tableName = getTable(from_);
-            }
-
-            for (int i = 0; i < tree.getChildCount(); i++) {
-                var child = tree.getChild(i);
-
+                List<String> output = new ArrayList<>();
+                for (int i = 0; i < tree.getChildCount(); i++) {
+                    output.addAll(getTable(tree.getChild(i)));
+                }
+                return output;
             }
         } else {
-            var result = traverse(tree);
-            for (var key : result.keySet()) {
-                if (output.containsKey(key)) {
-                    output.get(key).addAll(result.get(key));
-                } else {
-                    output.put(key, result.get(key));
-                }
+            List<String> output = new ArrayList<>();
+            for (int i = 0; i < tree.getChildCount(); i++) {
+                output.addAll(getTable(tree.getChild(i)));
             }
+            return output;
         }
-        return output;
     }
 
     public Map<String, Object> parse(String query) {
@@ -112,12 +84,9 @@ public class ParserService2 {
             var parseTree = parser.parse();
             var walker = new ParseTreeWalker();
             walker.walk(listener, parseTree);
-            Map<String, Set<String>> tableAndColumns = new HashMap<>();
-
             return Map.of("data", Map.of(
                     "tree", toMap(parseTree, parser.getVocabulary()),
-//                    "tables", tableAndColumns.keySet().stream().filter(x -> !x.equals(NON_RECOGNIZED_COLUMNS_KEY)),
-                    "columns", tableAndColumns
+                    "tables", getTable(parseTree)
             ));
 
         } catch (SqlParseException e) {

@@ -27,6 +27,7 @@ dependencies {
 
     antlr("org.antlr:antlr4:4.11.1")
     implementation("org.antlr:antlr4-runtime:4.11.1")
+    implementation("org.json:json:20231013")
 
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")

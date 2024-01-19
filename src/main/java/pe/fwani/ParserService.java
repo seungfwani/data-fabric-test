@@ -1,14 +1,11 @@
 package pe.fwani;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.Vocabulary;
+import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import pe.fwani.antlr.*;
 import pe.fwani.antlr.SqliteV2Lexer;
@@ -55,6 +52,7 @@ public class ParserService {
 
     public List<String> getTable(ParseTree tree) {
         if (tree instanceof SqliteV2Parser.Table_or_subqueryContext) {
+            ((SqliteV2Parser.Table_or_subqueryContext) tree).table_or_subquery(0);
             if (((SqliteV2Parser.Table_or_subqueryContext) tree).table_name() != null) {
                 return List.of(tree.getText());
             } else {
@@ -74,10 +72,11 @@ public class ParserService {
     }
 
     public String generate(String queryMap) {
-        var om = new ObjectMapper();
-
-        return "";
+        var jsonObject = new JSONObject(queryMap);
+        var tree = QueryTreeSerializer.deserialize(jsonObject);
+        return QueryTreeSerializer.convertTreeToString(tree);
     }
+
     public Map<String, Object> parse(String query) {
         var lexer = new SqliteV2Lexer(CharStreams.fromString(query));
 

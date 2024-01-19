@@ -32,8 +32,8 @@ public class ParserController {
     }
 
     @PostMapping(value = "/generate")
-    public Object generate(@RequestBody String queryMap) {
-        return service.generate(queryMap);
+    public String  generate(@RequestBody TreeDTO tree) {
+        return service.generate(tree.getTree());
     }
 
 }

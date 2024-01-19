@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.json.JSONObject;
+import pe.fwani.antlr.SqliteV2Lexer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -50,6 +51,19 @@ public class QueryTreeSerializer {
         return deserialize(jsonObject, null, invokingState).get(0);
     }
 
+    public static int getTypeInt(JSONObject jsonObject) {
+        var type_ = jsonObject.get("type");
+        if (type_ instanceof String) {
+            try {
+                return (int) SqliteV2Lexer.class.getDeclaredField((String) type_).get(null);
+            } catch (NoSuchFieldException e) {
+                return -1;
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return (int) type_;
+    }
     public static List<ParseTree> deserialize(JSONObject jsonObject, ParserRuleContext parent, int invokingState) {
         // parent = null, invokingState = -1
         List<ParseTree> output = new ArrayList<>();
@@ -59,7 +73,7 @@ public class QueryTreeSerializer {
             if (jsonObject.getString("text").equals("<EOF>")) {
                 symbol = new CommonToken(-1, jsonObject.getString("text"));
             } else {
-                symbol = new CommonToken(jsonObject.getInt("type"), jsonObject.getString("text"));
+                symbol = new CommonToken(getTypeInt(jsonObject), jsonObject.getString("text"));
             }
             output.add(new TerminalNodeImpl(symbol));
             return output;
@@ -90,5 +104,21 @@ public class QueryTreeSerializer {
 
         }
         return output;
+    }
+
+    public static String convertTreeToString(ParseTree tree) {
+        if (tree instanceof TerminalNodeImpl) {
+            if (tree.getText().equals("<EOF>")) {
+                return ";";
+            }
+            return tree.getText();
+        } else {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < tree.getChildCount(); i++) {
+                builder.append(convertTreeToString(tree.getChild(i)))
+                        .append(" ");
+            }
+            return builder.toString().strip();
+        }
     }
 }

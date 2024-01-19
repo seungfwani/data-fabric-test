@@ -90,4 +90,26 @@ class QueryTreeSerializerTest {
         System.out.println(result.toStringTree());
         System.out.println(QueryTreeSerializer.serialize(result));
     }
+
+    @Test
+    void convertTreeToString() {
+//        var lexer = new SqliteV2Lexer(CharStreams.fromString(sql));
+        var lexer = new SqliteV2Lexer(CharStreams.fromString("select" +
+                " a,b,c as fas, 231, test(adsf) from ab, (select * from aaab) gsdf" +
+                " where adf >= 12324 and (asdb in ('asdf', 'asdf','gggs') or sdfg like 'asdb')"));
+
+        var tokens = new CommonTokenStream(lexer);
+        var parser = new SqliteV2Parser(tokens);
+        parser.removeErrorListeners();
+        parser.addErrorListener(new QueryParseErrorListener());
+        try {
+            var parseTree = parser.parse();
+            var result = QueryTreeSerializer.convertTreeToString(parseTree);
+            System.out.println(parseTree.toStringTree());
+            System.out.println(parseTree.getText());
+            System.out.println(result);
+        } catch (SqlParseException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 }

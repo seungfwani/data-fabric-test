@@ -109,7 +109,7 @@ public class QueryTreeSerializer {
     public static String convertTreeToString(ParseTree tree) {
         if (tree instanceof TerminalNodeImpl) {
             if (tree.getText().equals("<EOF>")) {
-                return ";";
+                return "";
             }
             return tree.getText();
         } else {

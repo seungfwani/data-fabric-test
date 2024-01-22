@@ -35,4 +35,71 @@ class ParserServiceTest {
         System.out.println(result);
         Assertions.assertEquals(List.of("cvb", "test.Orders"), ((Map<?, ?>) result.get("data")).get("tables"));
     }
+
+    @Test
+    void generate_string() {
+        var treeJson = """
+                {
+                      "parse": [
+                        {
+                          "sql_stmt_list": [
+                            {
+                              "sql_stmt": [
+                                {
+                                  "select_stmt": [
+                                    {
+                                      "select_core": [
+                                        {
+                                          "type": "K_SELECT",
+                                          "text": "select"
+                                        },
+                                        {
+                                          "result_column": [
+                                            {
+                                              "expr": [
+                                                {
+                                                  "literal_value": [
+                                                    {
+                                                      "type": "NUMERIC_LITERAL",
+                                                      "text": "1"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "SCOL",
+                              "text": ";"
+                            },
+                            {
+                              "type": "SCOL",
+                              "text": ";"
+                            },
+                            {
+                              "type": "SCOL",
+                              "text": ";"
+                            },
+                            {
+                              "type": "SCOL",
+                              "text": ";"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "EOF",
+                          "text": "<EOF>"
+                        }
+                      ]
+                    }""";
+        var result = service.generate(treeJson);
+        Assertions.assertEquals("select 1 ; ; ; ;", result);
+    }
 }

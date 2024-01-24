@@ -1,4 +1,4 @@
-package pe.fwani;
+package pe.fwani.antlr;
 
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.CommonToken;
@@ -23,7 +23,7 @@ import java.util.List;
  * @since 0.0.1
  */
 @Slf4j
-public class QueryTreeSerializer {
+public class QueryTreeJsonSerializer {
     private static final String PARSER_CLASS = "pe.fwani.antlr.SqliteV2Parser$";
 
     public static JSONObject serialize(ParseTree tree) {

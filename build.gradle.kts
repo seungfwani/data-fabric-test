@@ -11,12 +11,18 @@ version = "1.0-SNAPSHOT"
 sourceSets {
     main {
         java {
-            srcDirs("src/main/java", "${buildDir}/generated/sources/antlr/main")
+            srcDirs( "${buildDir}/generated/sources/antlr/main")
         }
     }
 }
 repositories {
     mavenCentral()
+}
+
+configurations {
+    all {
+        exclude(group = "org.apache.logging.log4j", module = "log4j-to-slf4j")
+    }
 }
 
 dependencies {
@@ -29,6 +35,8 @@ dependencies {
     implementation("org.antlr:antlr4-runtime:4.11.1")
     implementation("org.json:json:20231013")
 
+    implementation("org.apache.spark:spark-core_2.13:3.5.0")
+    implementation("org.apache.spark:spark-sql_2.13:3.5.0")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
@@ -42,7 +50,7 @@ tasks.generateGrammarSource {
         "-long-messages",
         "-package", "pe.fwani.antlr"
     )
-    outputDirectory = file("${buildDir}/generated/sources/antlr/main")
+    outputDirectory = file("${buildDir}/generated/sources/antlr/main/pe/fwani/antlr")
 }
 
 

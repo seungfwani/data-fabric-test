@@ -2,20 +2,12 @@ package pe.fwani;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.json.JSONObject;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import pe.fwani.antlr.*;
-import pe.fwani.antlr.SqliteV2Lexer;
-import pe.fwani.antlr.SqliteV2Parser;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * <p>
@@ -24,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @version 0.0.1
  * @since 0.0.1
  */
-class QueryTreeSerializerTest {
+class QueryTreeJsonSerializerTest {
     private String sql = "select * from a";
 
     @Test
@@ -37,7 +29,7 @@ class QueryTreeSerializerTest {
         parser.addErrorListener(new QueryParseErrorListener());
         try {
             var parseTree = parser.parse();
-            var result = QueryTreeSerializer.serialize(parseTree);
+            var result = QueryTreeJsonSerializer.serialize(parseTree);
             System.out.println(parseTree.toStringTree());
             System.out.println(parseTree.getText());
             System.out.println(result);
@@ -85,10 +77,10 @@ class QueryTreeSerializerTest {
         );
         var inputJson = new JSONObject();
         inputJson.put("parse", input);
-        var result = QueryTreeSerializer.deserialize(inputJson);
+        var result = QueryTreeJsonSerializer.deserialize(inputJson);
         System.out.println(result.getText());
         System.out.println(result.toStringTree());
-        System.out.println(QueryTreeSerializer.serialize(result));
+        System.out.println(QueryTreeJsonSerializer.serialize(result));
     }
 
     @Test
@@ -104,7 +96,7 @@ class QueryTreeSerializerTest {
         parser.addErrorListener(new QueryParseErrorListener());
         try {
             var parseTree = parser.parse();
-            var result = QueryTreeSerializer.convertTreeToString(parseTree);
+            var result = QueryTreeJsonSerializer.convertTreeToString(parseTree);
             System.out.println(parseTree.toStringTree());
             System.out.println(parseTree.getText());
             System.out.println(result);

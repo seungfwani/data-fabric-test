@@ -29,7 +29,7 @@ class QueryTreeJsonSerializerTest {
         parser.addErrorListener(new QueryParseErrorListener());
         try {
             var parseTree = parser.parse();
-            var result = QueryTreeJsonSerializer.serialize(parseTree);
+            var result = new QueryTreeJsonSerializer().serialize(parseTree);
             System.out.println(parseTree.toStringTree());
             System.out.println(parseTree.getText());
             System.out.println(result);
@@ -77,10 +77,11 @@ class QueryTreeJsonSerializerTest {
         );
         var inputJson = new JSONObject();
         inputJson.put("parse", input);
-        var result = QueryTreeJsonSerializer.deserialize(inputJson);
+        var serializer = new QueryTreeJsonSerializer();
+        var result = serializer.deserialize(inputJson);
         System.out.println(result.getText());
         System.out.println(result.toStringTree());
-        System.out.println(QueryTreeJsonSerializer.serialize(result));
+        System.out.println(serializer.serialize(result));
     }
 
     @Test
@@ -96,7 +97,7 @@ class QueryTreeJsonSerializerTest {
         parser.addErrorListener(new QueryParseErrorListener());
         try {
             var parseTree = parser.parse();
-            var result = QueryTreeJsonSerializer.convertTreeToString(parseTree);
+            var result = new QueryTreeJsonSerializer().convertTreeToString(parseTree);
             System.out.println(parseTree.toStringTree());
             System.out.println(parseTree.getText());
             System.out.println(result);

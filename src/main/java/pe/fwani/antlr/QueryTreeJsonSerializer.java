@@ -24,9 +24,21 @@ import java.util.List;
  */
 @Slf4j
 public class QueryTreeJsonSerializer {
-    private static final String PARSER_CLASS = "pe.fwani.antlr.SqliteV2Parser$";
+    private final String PARSER_CLASS;
 
-    public static JSONObject serialize(ParseTree tree) {
+    public QueryTreeJsonSerializer() {
+        this("pe.fwani.antlr.SqliteV2Parser$");
+    }
+
+    public QueryTreeJsonSerializer(String className) {
+        if (!className.endsWith("$")) {
+            className += "$";
+        }
+        PARSER_CLASS = className;
+    }
+
+
+    public JSONObject serialize(ParseTree tree) {
         var output = new JSONObject();
         if (tree instanceof TerminalNodeImpl) {
             var token = ((TerminalNodeImpl) tree).getSymbol();
@@ -46,7 +58,7 @@ public class QueryTreeJsonSerializer {
     }
 
 
-    public static ParseTree deserialize(JSONObject jsonObject) {
+    public ParseTree deserialize(JSONObject jsonObject) {
         int invokingState = -1;
         return deserialize(jsonObject, null, invokingState).get(0);
     }
@@ -64,7 +76,8 @@ public class QueryTreeJsonSerializer {
         }
         return (int) type_;
     }
-    public static List<ParseTree> deserialize(JSONObject jsonObject, ParserRuleContext parent, int invokingState) {
+
+    public List<ParseTree> deserialize(JSONObject jsonObject, ParserRuleContext parent, int invokingState) {
         // parent = null, invokingState = -1
         List<ParseTree> output = new ArrayList<>();
         if (jsonObject.keySet().contains("text") && jsonObject.keySet().contains("type")) {
@@ -106,7 +119,7 @@ public class QueryTreeJsonSerializer {
         return output;
     }
 
-    public static String convertTreeToString(ParseTree tree) {
+    public String convertTreeToString(ParseTree tree) {
         if (tree instanceof TerminalNodeImpl) {
             if (tree.getText().equals("<EOF>")) {
                 return "";

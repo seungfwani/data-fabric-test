@@ -1,17 +1,21 @@
 package pe.fwani;
 
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.Vocabulary;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import pe.fwani.antlr.*;
-import pe.fwani.antlr.SqliteV2Lexer;
-import pe.fwani.antlr.SqliteV2Parser;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -23,12 +27,19 @@ import java.util.*;
 @Slf4j
 @Service
 public class ParserService {
-    private final String NON_RECOGNIZED_COLUMNS_KEY = "_other";
 
-    public Map<String, Object> toMap(ParseTree tree, Vocabulary vocabulary) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        traverse(tree, map, vocabulary);
-        return map;
+    public List<Map<String, Object>> toMap(ParseTree tree, Vocabulary vocabulary) {
+        List<Map<String, Object>> output = new ArrayList<>();
+        for (int i = 0; i < tree.getChildCount(); i++) {
+            if (tree instanceof SqliteV2Parser.Sql_stmtContext) {
+                Map<String, Object> map = new LinkedHashMap<>();
+                traverse(tree, map, vocabulary);
+                output.add(map);
+            } else {
+                output.addAll(toMap(tree.getChild(i), vocabulary));
+            }
+        }
+        return output;
     }
 
     public void traverse(ParseTree tree, Map<String, Object> map, Vocabulary vocabulary) {
@@ -73,8 +84,9 @@ public class ParserService {
 
     public String generate(String queryMap) {
         var jsonObject = new JSONObject(queryMap);
-        var tree = QueryTreeSerializer.deserialize(jsonObject);
-        return QueryTreeSerializer.convertTreeToString(tree);
+        var serializer = new QueryTreeJsonSerializer();
+        var tree = serializer.deserialize(jsonObject);
+        return serializer.convertTreeToString(tree);
     }
 
     public Map<String, Object> parse(String query) {
@@ -82,7 +94,8 @@ public class ParserService {
 
         var tokens = new CommonTokenStream(lexer);
         var parser = new SqliteV2Parser(tokens);
-        var listener = new QueryParseListener();
+//        var listener = new QueryParseListener();
+        var listener = new QueryParserV2Listener();
         parser.removeErrorListeners();
         parser.addErrorListener(new QueryParseErrorListener());
         try {

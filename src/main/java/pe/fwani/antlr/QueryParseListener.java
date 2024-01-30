@@ -11,7 +11,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
  * @since 0.0.1
  */
 @Slf4j
-public class QueryParseListener extends pe.fwani.antlr.SqliteBaseListener {
+public class QueryParseListener extends SqliteV2BaseListener {
     @Override
     public void enterEveryRule(ParserRuleContext ctx) {
         log.info("rule entered: " + ctx.getText());

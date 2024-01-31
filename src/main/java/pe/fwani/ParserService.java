@@ -6,7 +6,6 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.Vocabulary;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -90,21 +89,17 @@ public class ParserService {
     }
 
     public Map<String, Object> parse(String query) {
-        var lexer = new SqliteV2Lexer(CharStreams.fromString(query));
+        var lexer = new DataFabricSqlLexer(CharStreams.fromString(query));
 
         var tokens = new CommonTokenStream(lexer);
-        var parser = new SqliteV2Parser(tokens);
-//        var listener = new QueryParseListener();
-        var listener = new QueryParserV2Listener();
-        parser.removeErrorListeners();
-        parser.addErrorListener(new QueryParseErrorListener());
+        var parser = new DataFabricSqlParser(tokens);
+        var visitor = new MyDataFabricSqlVisitor();
         try {
             var parseTree = parser.parse();
-            var walker = new ParseTreeWalker();
-            walker.walk(listener, parseTree);
+            visitor.visit(parseTree);
             return Map.of("data", Map.of(
-                    "tree", toMap(parseTree, parser.getVocabulary()),
-                    "tables", getTable(parseTree)
+                    "tree", visitor.getJsonTree().toMap(),
+                    "tables", visitor.getModels()
             ));
 
         } catch (SqlParseException e) {

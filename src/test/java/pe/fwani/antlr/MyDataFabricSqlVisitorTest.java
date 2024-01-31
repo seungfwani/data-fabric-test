@@ -23,7 +23,7 @@ class MyDataFabricSqlVisitorTest {
         var tokens = new CommonTokenStream(lexer);
         var parser = new DataFabricSqlParser(tokens);
 //        var visitor = new MyDataFabricSqlVisitor();
-        var visitor = new MyDataFabricSqlVisitorV2();
+        var visitor = new MyDataFabricSqlVisitor();
         try {
             var parseTree = parser.parse();
             var result = visitor.visit(parseTree);

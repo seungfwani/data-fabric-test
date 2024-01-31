@@ -9,7 +9,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.json.JSONObject;
-import pe.fwani.antlr.SqliteV2Lexer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -28,6 +27,10 @@ public class QueryTreeJsonSerializer {
 
     public QueryTreeJsonSerializer() {
         this("pe.fwani.antlr.SqliteV2Parser$");
+    }
+
+    public QueryTreeJsonSerializer(Class<?> clazz) {
+        this(clazz.getName());
     }
 
     public QueryTreeJsonSerializer(String className) {

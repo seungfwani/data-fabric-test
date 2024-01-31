@@ -25,8 +25,6 @@ class QueryTreeJsonSerializerTest {
 
         var tokens = new CommonTokenStream(lexer);
         var parser = new SqliteV2Parser(tokens);
-        parser.removeErrorListeners();
-        parser.addErrorListener(new QueryParseErrorListener());
         try {
             var parseTree = parser.parse();
             var result = new QueryTreeJsonSerializer().serialize(parseTree);
@@ -93,8 +91,6 @@ class QueryTreeJsonSerializerTest {
 
         var tokens = new CommonTokenStream(lexer);
         var parser = new SqliteV2Parser(tokens);
-        parser.removeErrorListeners();
-        parser.addErrorListener(new QueryParseErrorListener());
         try {
             var parseTree = parser.parse();
             var result = new QueryTreeJsonSerializer().convertTreeToString(parseTree);
